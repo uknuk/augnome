@@ -66,3 +66,16 @@ lib.loadAlbum = function(alb) {
 
   return sel;
 }
+
+lib.cut = function(name, limit) {
+  let words = name.split(/\s+|\_+|\-+/);
+  let sizes = words.reduce(function(acc, w) {
+    acc.push((acc.length > 0 ? acc[acc.length - 1] : 0) + w.length);
+    return acc;
+  }, [])
+  return words.filter((w, n) => sizes[n] < limit).join(" ");
+}
+
+lib.save = function(data) {
+  fs.writeFileSync(lastFile, data.join('\n'));
+}

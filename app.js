@@ -2,99 +2,122 @@ const Gtk = require('Gtk'),
       Gdk = require('Gdk'),
       mainloop = imports.mainloop,
       path = require('path'),
-      player = require('./player'),
       lib = require('./lib');
 
 
 class App {
   constructor() {
-    this.title = 'Audio Gnome'
-    require('GLib').setPrgname(this.title);
+    require('GLib').setPrgname('Audio Gnome');
   }
 
   run() {
     this.app = new Gtk.Application();
     this.app.on('activate', this.onActivate.bind(this));
     this.app.on('startup', this.onStartup.bind(this));
-
+    this.app.on('destroy', Gtk.mainQuit);
     this.app.run([]);
   }
 
   onActivate() {
-    this.win.show_all();
     this.arts = lib.loadArts();
+
+    for (let art in this.arts) {
+      var btn = new Gtk.Button({label: art});
+      btn.on("clicked", this.selectArtist.bind(null, art))
+      this.view.frames.arts.insert(btn, -1);
+    }
+    this.view.frames.arts.on('activate', () => print('activated'));
+
     let [art, alb, num] = lib.loadLast();
 
-    player.init();
+    this.player = require('./player.js').Player()
+    this.player.init(this);
     mainloop.timeout_add(1000, (function() {
-      if (player.isPlaying()) {
-        let [pos, dur] = player.readPosition();
-        this.pLabel.label = `${pos} ${dur}`;
-      }
+      if (this.player.isPlaying())
+        this.player.updatePosition();
       return true;
     }).bind(this));
 
     if (num) {
-      this.art = this.selArt = art;
-      let artPath = this.arts[art];
-      player.albs = lib.loadAlbums(artPath);
-      player.playAlbum(path.join(artPath, alb), parseInt(num));
+      this.selArt = art;
+      this.albs = lib.loadAlbums(this.arts[art]);
+      this.selectAlbum(alb, num);
+
+      for (let alb of this.albs) {
+        let btn = new Gtk.Button({label: lib.cut(alb, 40)});
+        btn.on("clicked", this.selectAlbum.bind(this, alb, 0));
+        this.view.panes.albs.insert(btn, -1);
+      }
+
+      this.addTracks();
     }
-    //mainloop.run();
+    this.view.win.showAll();
   }
 
   onStartup() {
-    this.win = new Gtk.ApplicationWindow(
-      { application: this.app,
-        defaultHeight: 572,
-        defaultWidth: 1024,
-        windowPosition: Gtk.WindowPosition.CENTER
-      });
-
-    this.header = new Gtk.HeaderBar({title: "Audio Gnome Invisible"});
-    this.header.setShowCloseButton(true);
-    this.win.setTitlebar(this.header);
-
-    this.pLabel = new Gtk.Label();
-    this.tLabel = new Gtk.Label({label: 'Track'});
-
-    this.stack = new Gtk.Stack()
-    this.transition = {player: 'artists', artists: 'player'}
-    this.stack.addTitled(this.pLabel, "player", "Player");
-    this.stack.addTitled(this.tLabel, "artists", "Artists");
-
-    this.switcher = new Gtk.StackSwitcher();
-    this.switcher.setStack(this.stack);
-    this.header.add(this.switcher);
-
-    this.searchBar = new Gtk.SearchBar();
-    this.searchBar.show();
-    let searchEntry = new Gtk.SearchEntry();
-    searchEntry.show();
-    this.searchBar.connectEntry(searchEntry);
-    this.searchBar.add(searchEntry);
-    this.searchBar.setSearchMode(true);
-    this.header.add(this.searchBar);
-
-    this.win.add(this.stack);
-    this.win.on('key_press_event', this.onKey.bind(this));
+    this.view = require('./view.js').View(this.app);
+    this.view.win.on('key_press_event', this.onKey.bind(this));
   }
 
   onKey(widget, event) {
     var key = Gdk.keyvalName(event.getKeyval()[1]);
+    print(key);
     switch(key) {
-    case 'less':
-      player.changeState();
+    case 'Left':
+      this.view.stack.setVisibleChildName('player');
       break;
-    case 'apostrophe':
-    let newStack = this.transition[this.stack.getVisibleChildName()];
-    this.stack.setVisibleChildName(newStack);
+    case 'Right':
+      this.view.stack.setVisibleChildName('arts');
+      break;
+    case 'Down':
+      this.player.volume(-0.1);
+      break;
+    case 'Up':
+      this.player.volume(0.1);
+      break
+    case 'space':
+      this.player.changeState();
       break;
     }
+    return true;
+  }
+
+  selectArtist(art) {
+    print(art);
+  }
+
+  selectAlbum(alb) {
+    this.alb = alb;
+    this.art = this.selArt;
+    this.view.labels.art.label = this.art;
+    this.view.labels.alb.label = this.alb;
+    this.player.playAlbum(path.join(this.arts[this.art], this.alb), 0);
+    this.addTracks();
+  }
+
+  addTracks() {
+    for (let child of this.view.panes.tracks.getChildren())
+      child.destroy()
+
+    let n = 0;
+    for (let track of this.player.getTracks()) {
+      let btn = new Gtk.Button({label: lib.cut(path.basename(track), 25)});
+      btn.on("clicked", this.selectTrack.bind(this, n++));
+      this.view.panes.tracks.insert(btn, -1);
+    }
+    this.view.win.showAll();
+  }
+
+  save(tNum) {
+    lib.save([this.art, this.alb, tNum])
+  }
+
+  selectTrack(n) {
+    // change color
+    this.player.playTrack(n);
   }
 
 }
-
 
 let app = new App();
 app.run();
