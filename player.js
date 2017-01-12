@@ -9,22 +9,19 @@ const player = exports,
 
 Gst.init(null, 0);
 
-player.Player = function() {
-  // private
-  var app =  null,
+player.Player = function(theApp) {
+
+  let app = theApp,
       bin = Gst.ElementFactory.make("playbin", "play"),
-      bus = bin.get_bus();
-
-  // public
-  var tracks = [],
-      albs = [],
-      tNum = 0,
-      aNum =null;
+      bus = bin.get_bus(),
+      view = null,
+      tracks: [],
+      tNum = 0;
 
 
-  var init = function(_app) {
-    app = _app;
-    bus.add_signal_watch();
+  function init(theView) {
+    view = theView;
+    bus.addSignalWatch();
     bus.connect('message', function(bus, msg) {
       if (msg.type == Gst.MessageType.EOS) {
         tNum++;
@@ -33,47 +30,49 @@ player.Player = function() {
     });
   };
 
-  var  playAlbum = function(alb, num) {
+  function playAlbum(alb, num) {
     tracks = lib.loadTracks(alb);
     playTrack(num);
   };
 
-  var playTrack = function(num = null) {
+  function playTrack(num = null) {
     if (num != null)
       tNum = num;
     let track = tracks[tNum]
-    app.view.labels.track.label = path.basename(track);
+    view.labels.track.label = path.basename(track);
     bin.set_state(Gst.State.NULL);
     bin.set_property('uri', path2uri(track));
     bin.set_state(Gst.State.PLAYING);
     app.save(tNum);
   };
 
-  var updatePosition = function() {
+  function updatePosition() {
     var  d = [
       time(bin.query_position(Gst.Format.TIME)),
       time(bin.query_duration(Gst.Format.TIME))
     ];
-    app.view.labels.pos.label = `${d[0]} ${d[1]}`;
+    view.labels.pos.label = `${d[0]} ${d[1]}`;
   };
 
-  var  changeState = function() {
+  function changeState() {
     if (isPlaying())
       bin.setState(Gst.State.PAUSED);
     else if (isPaused())
       bin.setState(Gst.State.PLAYING);
-  };
+  }
 
-  var isPlaying = () => bin.getState(1000)[1] == Gst.State.PLAYING;
+  const isPlaying = () => bin.getState(1000)[1] == Gst.State.PLAYING;
 
-  var isPaused = () => bin.getState(1000)[1] == Gst.State.PAUSED;
+  const isPaused = () => bin.getState(1000)[1] == Gst.State.PAUSED;
 
-  var getTracks = () => tracks;
+  const getTracks = () => tracks;
 
-  let volume = function(delta) {
+  function volume(delta) {
     if (bin.volume < 1 && bin.volume > 0)
       bin.volume += delta;
   }
 
-  return { getTracks, init, isPlaying, updatePosition, playAlbum, playTrack, changeState, volume }
+  const stop = ()  => bin.setState(Gst.State.NULL);
+
+  return { getTracks, init, isPlaying, updatePosition, playAlbum, playTrack, changeState, volume, stop }
 }

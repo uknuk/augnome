@@ -15,7 +15,7 @@ lib.loadLast = function() {
   }
 }
 
-lib.loadArts = function() {
+lib.loadArtists = function() {
   var buf = fs.readFileSync(path.join(process.env['HOME'],'.mhdirs')),
       roots = buf.toString().replace(/\n+/,'').split(/\s+/);
 
