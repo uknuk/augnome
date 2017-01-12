@@ -48,18 +48,9 @@ const App = function(_player) {
 
     if (num) {
       st.selArt = art;
-      st.albs = lib.loadAlbums(st.arts[art]);
+      addAlbums(art);
       selectAlbum(alb, num);
-
-      for (let alb of st.albs) {
-        let btn = new Gtk.Button({label: lib.cut(alb, 40)});
-        btn.on("clicked", selectAlbum.bind(null, alb, 0));
-        view.panes.albs.insert(btn, -1);
-      }
-
-      addTracks();
     }
-    view.win.showAll();
   }
 
   function onStartup() {
@@ -91,12 +82,15 @@ const App = function(_player) {
   }
 
   function selectArtist(art) {
-    print(art);
+    st.selArt = art;
+    addAlbums(art);
+    view.stack.setVisibleChildName('player');
   }
 
   function selectAlbum(alb, tNum) {
     st.alb = alb;
     st.art = st.selArt;
+    st.albs = st.selAlbs;
     view.labels.art.label = st.art;
     view.labels.alb.label = st.alb;
     player.playAlbum(path.join(st.arts[st.art], st.alb), tNum);
@@ -105,7 +99,7 @@ const App = function(_player) {
 
   function addTracks() {
     for (let child of view.panes.tracks.getChildren())
-      child.destroy()
+      child.destroy();
 
     let n = 0;
     for (let track of player.getTracks()) {
@@ -116,6 +110,21 @@ const App = function(_player) {
     }
     view.win.showAll();
   }
+
+  function addAlbums(art) {
+    st.selAlbs = lib.loadAlbums(st.arts[art]);
+    for (let child of view.panes.albs.getChildren())
+      child.destroy();
+
+    for (let alb of st.selAlbs) {
+      let btn = new Gtk.Button({label: lib.cut(alb, 40)});
+      btn.on("clicked", selectAlbum.bind(null, alb, 0));
+      view.panes.albs.insert(btn, -1);
+    }
+
+    view.win.showAll();
+  }
+
 
   function save(tNum) {
     lib.save([st.art, st.alb, tNum])

@@ -72,7 +72,7 @@ player.Player = function(theApp) {
       bin.volume += delta;
   }
 
-  const stop = ()  => bin.setState(Gst.State.NULL);
+  const stop = () => bin.setState(Gst.State.NULL);
 
   return { getTracks, init, isPlaying, updatePosition, playAlbum, playTrack, changeState, volume, stop }
 }
