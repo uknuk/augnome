@@ -5,7 +5,7 @@ const Gtk = require('Gtk'),
       lib = require('./lib');
 
 
-const App = function(_player) {
+const App = function() {
   let player = null,
       app = null,
       st = {},
@@ -31,9 +31,12 @@ const App = function(_player) {
     st.arts = lib.loadArtists();
 
     for (let art in st.arts) {
-      var btn = new Gtk.Button({label: art});
-      btn.on("clicked", selectArtist.bind(null, art))
-      view.frames.arts.insert(btn, -1);
+      let lbl = new Gtk.Label()
+      lbl.setMarkup(`<span color='blue' font='8'>${lib.cut(art,25)}</span>`)
+      let btn = new Gtk.Button();
+      btn.add(lbl);
+      btn.on("clicked", selectArtist.bind(null, art));
+      view.frames.arts.add(btn);
     }
     view.frames.arts.on('activate', () => print('activated'));
 
@@ -91,10 +94,17 @@ const App = function(_player) {
     st.alb = alb;
     st.art = st.selArt;
     st.albs = st.selAlbs;
-    view.labels.art.label = st.art;
-    view.labels.alb.label = st.alb;
+    write('art', 'blue', 24, st.art);
+    write('alb', 'green', 24, st.alb);
     player.playAlbum(path.join(st.arts[st.art], st.alb), tNum);
     addTracks();
+  }
+
+  const write = (lbl, color, sz, txt) =>
+        view.labels[lbl].setMarkup(`<span color='${color}' font='${sz}'>${txt}</span>`);
+
+  function writeTrack(track) {
+    write('track', 'blue', 24, track);
   }
 
   function addTracks() {
@@ -136,7 +146,7 @@ const App = function(_player) {
   }
 
 
-  return {run, save}
+  return {run, save, writeTrack}
 }
 
 require('GLib').setPrgname('Audio Gnome');

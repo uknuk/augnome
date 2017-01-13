@@ -22,8 +22,8 @@ view.View = function(app) {
   let panes = {
     info: new Gtk.Box(),
     slider: new Gtk.Box(),
-    albs: new Gtk.FlowBox(),
-    tracks: new Gtk.FlowBox(),
+    albs: new Gtk.FlowBox({maxChildrenPerLine: 10}),
+    tracks: new Gtk.FlowBox({maxChildrenPerLine: 15})
   }
 
   for (let p in panes) {

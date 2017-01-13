@@ -38,8 +38,8 @@ player.Player = function(theApp) {
   function playTrack(num = null) {
     if (num != null)
       tNum = num;
-    let track = tracks[tNum]
-    view.labels.track.label = path.basename(track);
+    let track = tracks[tNum];
+    app.writeTrack(path.basename(track));
     bin.set_state(Gst.State.NULL);
     bin.set_property('uri', path2uri(track));
     bin.set_state(Gst.State.PLAYING);
