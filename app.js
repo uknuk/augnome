@@ -29,8 +29,7 @@ const App = function() {
 
   function onActivate() {
     st.arts = lib.loadArtists();
-
-    for (let art in st.arts) {
+    for (let art of Object.keys(st.arts).sort()) {
       let lbl = new Gtk.Label()
       lbl.setMarkup(`<span color='blue' font='8'>${lib.cut(art,25)}</span>`)
       let btn = new Gtk.Button();
@@ -136,8 +135,8 @@ const App = function() {
   }
 
 
-  function save(tNum) {
-    lib.save([st.art, st.alb, tNum])
+  function save(tNum, track) {
+    lib.save([st.art, st.alb, tNum, track])
   }
 
   function selectTrack(n) {

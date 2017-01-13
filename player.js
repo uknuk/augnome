@@ -1,6 +1,5 @@
 const player = exports,
       Gst = imports.gi.Gst,
-      //mainloop = imports.mainloop,
       fs = require('fs'),
       path = require('path'),
       lib = require('./lib'),
@@ -39,11 +38,12 @@ player.Player = function(theApp) {
     if (num != null)
       tNum = num;
     let track = tracks[tNum];
-    app.writeTrack(path.basename(track));
+    let base = path.basename(track)
+    app.writeTrack(base);
     bin.set_state(Gst.State.NULL);
     bin.set_property('uri', path2uri(track));
     bin.set_state(Gst.State.PLAYING);
-    app.save(tNum);
+    app.save(tNum, base);
   };
 
   function updatePosition() {
