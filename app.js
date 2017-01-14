@@ -109,7 +109,7 @@ function showArtists(entry = null) {
       return
     }
   }
-  view.buffer.setText(arts.join("\t"), -1);
+  view.buffer.setText(arts.map(a => lib.short(a)).join(" | "), -1);
 }
 
   function addTracks() {

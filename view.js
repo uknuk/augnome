@@ -17,7 +17,7 @@ view.View = function(app) {
   let buffer = new Gtk.TextBuffer();
 
   let css = new Gtk.CssProvider();
-  css.loadFromData("* { font-size: 18px; color: #0a0; }");
+  css.loadFromData("* { font-size: 11px; font-weight: bold; color: blue; }");
 
   let frames = {
     player: new Gtk.Box({orientation: Gtk.Orientation.VERTICAL}),
@@ -28,7 +28,7 @@ view.View = function(app) {
 
 
   let panes = {
-    info: new Gtk.Box(),
+    info: new Gtk.FlowBox(),
     slider: new Gtk.Box(),
     sep1: new Gtk.HSeparator(),
     albs: new Gtk.FlowBox({maxChildrenPerLine: 10}),
@@ -43,7 +43,8 @@ view.View = function(app) {
   let labels = {}
   for (let l of ['art', 'alb', 'track']) {
     labels[l] = new Gtk.Label();
-    panes.info.add(labels[l], false, false, 1);
+    //panes.info.add(labels[l], false, false, 1);
+    panes.info.add(labels[l]);
   }
 
   labels.pos = new Gtk.Label();
