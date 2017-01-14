@@ -14,15 +14,25 @@ view.View = function(app) {
   header.setShowCloseButton(true);
   win.setTitlebar(header);
 
+  let buffer = new Gtk.TextBuffer();
+
+  let css = new Gtk.CssProvider();
+  css.loadFromData("* { font-size: 18px; color: #0a0; }");
+
   let frames = {
     player: new Gtk.Box({orientation: Gtk.Orientation.VERTICAL}),
-    arts: new Gtk.FlowBox(),
+    arts: new Gtk.TextView({buffer: buffer, wrapMode: Gtk.WrapMode.WORD}),
   }
+
+  frames.arts.getStyleContext().addProvider(css, 0);
+
 
   let panes = {
     info: new Gtk.Box(),
     slider: new Gtk.Box(),
+    sep1: new Gtk.HSeparator(),
     albs: new Gtk.FlowBox({maxChildrenPerLine: 10}),
+    sep2: new Gtk.HSeparator(),
     tracks: new Gtk.FlowBox({maxChildrenPerLine: 15})
   }
 
@@ -33,11 +43,14 @@ view.View = function(app) {
   let labels = {}
   for (let l of ['art', 'alb', 'track']) {
     labels[l] = new Gtk.Label();
-    panes.info.packStart(labels[l], false, false, 1);
+    panes.info.add(labels[l], false, false, 1);
   }
 
   labels.pos = new Gtk.Label();
-  panes.slider.packStart(labels.pos, false, false, 1);
+  panes.slider.add(labels.pos, false, false, 1);
+
+  labels.vol = new Gtk.Label();
+  panes.slider.add(labels.vol, false, false, 1);
 
   let stack = new Gtk.Stack()
   stack.addTitled(frames.player, "player", "Player");
@@ -47,21 +60,22 @@ view.View = function(app) {
   switcher.setStack(stack);
   header.add(switcher);
 
-  let searchBar = new Gtk.SearchBar();
-  searchBar.show();
+  let search = {
+    bar: new Gtk.SearchBar(),
+    entry: new Gtk.SearchEntry()
+  }
 
-  let searchEntry = new Gtk.SearchEntry();
-  searchEntry.show();
+  search.bar.show();
+  search.entry.show();
 
-  searchBar.connectEntry(searchEntry);
-  searchBar.add(searchEntry);
-  searchBar.setSearchMode(true);
-  header.add(searchBar);
+  search.bar.connectEntry(search.entry);
+  search.bar.add(search.entry);
+  header.add(search.bar);
 
   let scroll = new Gtk.ScrolledWindow();
   scroll.add(stack);
 
   win.add(scroll);
 
-  return {win, scroll, stack, switcher, labels, panes, frames, header}
+  return {win, scroll, stack, switcher, labels, panes, frames, header, buffer, search}
 }

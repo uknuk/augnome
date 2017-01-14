@@ -79,3 +79,9 @@ lib.cut = function(name, limit) {
 lib.save = function(data) {
   fs.writeFileSync(lastFile, data.join('\n'));
 }
+
+lib.base = name => path.basename(name, path.extname(name));
+
+lib.shortBase = (name, limit = 40) => lib.cut(lib.base(name), limit);
+
+lib.short = (name, limit = 20) => name.substring(0, lib.cut(name, limit).length)

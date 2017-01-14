@@ -68,8 +68,9 @@ player.Player = function(theApp) {
   const getTracks = () => tracks;
 
   function volume(delta) {
-    if (bin.volume < 1 && bin.volume > 0)
+    if (bin.volume < 10 && bin.volume > 0.1)
       bin.volume += delta;
+    return bin.volume;
   }
 
   const stop = () => bin.setState(Gst.State.NULL);

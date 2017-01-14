@@ -29,15 +29,7 @@ const App = function() {
 
   function onActivate() {
     st.arts = lib.loadArtists();
-    for (let art of Object.keys(st.arts).sort()) {
-      let lbl = new Gtk.Label()
-      lbl.setMarkup(`<span color='blue' font='8'>${lib.cut(art,25)}</span>`)
-      let btn = new Gtk.Button();
-      btn.add(lbl);
-      btn.on("clicked", selectArtist.bind(null, art));
-      view.frames.arts.add(btn);
-    }
-    view.frames.arts.on('activate', () => print('activated'));
+    showArtists();
 
     let [art, alb, num] = lib.loadLast();
 
@@ -50,61 +42,75 @@ const App = function() {
 
     if (num) {
       st.selArt = art;
-      addAlbums(art);
+      addAlbums();
       selectAlbum(alb, num);
     }
   }
 
   function onStartup() {
     view = require('./view.js').View(app);
-    view.win.on('key_press_event', onKey);
-  }
+    view.search.entry.on("search-changed", () => {
+      showArtists(view.search.entry.getText());
+    });
 
-  function onKey(widget, event) {
-    var key = Gdk.keyvalName(event.getKeyval()[1]);
-    print(key);
-    switch(key) {
-    case 'Left':
-      view.stack.setVisibleChildName('player');
-      break;
-    case 'Right':
-      view.stack.setVisibleChildName('arts');
-      break;
-    case 'Down':
-      player.volume(-0.1);
-      break;
-    case 'Up':
-      player.volume(0.1);
-      break
-    case 'space':
-      player.changeState();
-      break;
-    }
-    return true;
-  }
-
-  function selectArtist(art) {
-    st.selArt = art;
-    addAlbums(art);
-    view.stack.setVisibleChildName('player');
+    view.win.on('key_press_event', (widget, event) => {
+      let key = Gdk.keyvalName(event.getKeyval()[1]);
+      switch(key) {
+      case 'Left':
+        switchTo('player')
+        break;
+      case 'Right':
+        switchTo('arts')
+        showArtists();
+        break;
+      case 'Down':
+        setVolume(-0.1);
+        break;
+      case 'Up':
+        setVolume(0.1);
+        break
+      case 'space':
+        player.changeState();
+        break;
+      case  'escape':
+        switchTo('player')
+      default:
+        switchTo('arts');
+        return false;
+      }
+      return true;
+    });
   }
 
   function selectAlbum(alb, tNum) {
     st.alb = alb;
     st.art = st.selArt;
     st.albs = st.selAlbs;
-    write('art', 'blue', 24, st.art);
-    write('alb', 'green', 24, st.alb);
+    write(view.labels.art, st.art, 24, 'blue');
+    write(view.labels.alb, lib.base(st.alb), 24, 'green');
     player.playAlbum(path.join(st.arts[st.art], st.alb), tNum);
     addTracks();
   }
 
-  const write = (lbl, color, sz, txt) =>
-        view.labels[lbl].setMarkup(`<span color='${color}' font='${sz}'>${txt}</span>`);
 
   function writeTrack(track) {
-    write('track', 'blue', 24, track);
+    write(view.labels.track,  track, 24, 'blue');
   }
+
+function showArtists(entry = null) {
+  let arts = Object.keys(st.arts)
+  if (entry) {
+    entry = entry.replace('-','_');
+    arts = arts.filter(art => art.toLowerCase().startsWith(entry))
+    if (arts.length == 1) {
+      st.selArt = arts[0];
+      addAlbums();
+      switchTo('player');
+      return
+    }
+  }
+  view.buffer.setText(arts.join("\t"), -1);
+}
 
   function addTracks() {
     for (let child of view.panes.tracks.getChildren())
@@ -112,7 +118,7 @@ const App = function() {
 
     let n = 0;
     for (let track of player.getTracks()) {
-      let btn = new Gtk.Button({label: lib.cut(path.basename(track), 25)});
+      let btn = setButton(lib.shortBase(track, 25), 16, 'blue');
       btn.on("clicked", selectTrack.bind(null, n));
       n++;
       view.panes.tracks.insert(btn, -1);
@@ -120,20 +126,30 @@ const App = function() {
     view.win.showAll();
   }
 
-  function addAlbums(art) {
-    st.selAlbs = lib.loadAlbums(st.arts[art]);
+  function addAlbums() {
+    st.selAlbs = lib.loadAlbums(st.arts[st.selArt]);
     for (let child of view.panes.albs.getChildren())
       child.destroy();
 
     for (let alb of st.selAlbs) {
-      let btn = new Gtk.Button({label: lib.cut(alb, 40)});
+      let btn = setButton(lib.shortBase(alb), 20, 'green');
       btn.on("clicked", selectAlbum.bind(null, alb, 0));
-      view.panes.albs.insert(btn, -1);
+      view.panes.albs.add(btn);
     }
 
     view.win.showAll();
   }
 
+  const write = (lbl, txt, size, color) =>
+        lbl.setMarkup(`<span color='${color}' font='${size}'>${txt}</span>`);
+
+  function setButton(txt, size, color) {
+    let lbl = new Gtk.Label();
+    write(lbl, txt, size, color);
+    let btn = new Gtk.Button();
+    btn.add(lbl);
+    return btn;
+  }
 
   function save(tNum, track) {
     lib.save([st.art, st.alb, tNum, track])
@@ -143,6 +159,14 @@ const App = function() {
     // change color
     player.playTrack(n);
   }
+
+  function switchTo(stack) {
+    view.stack.setVisibleChildName(stack);
+    view.search.bar.setSearchMode(stack == 'arts');
+  }
+
+  const setVolume = delta =>
+        write(view.labels.vol, Math.ceil(player.volume(delta)*100), 16, 'red');
 
 
   return {run, save, writeTrack}
