@@ -100,8 +100,11 @@ const App = function() {
 function showArtists(entry = null) {
   let arts = Object.keys(st.arts)
   if (entry) {
-    entry = entry.replace('-','_');
-    arts = arts.filter(art => art.toLowerCase().startsWith(entry))
+    // entry = entry.replace('-','_');
+    arts = arts.filter(
+      art => art.replace('_','-').toLowerCase().startsWith(entry)
+    );
+
     if (arts.length == 1) {
       st.selArt = arts[0];
       addAlbums();
@@ -109,7 +112,7 @@ function showArtists(entry = null) {
       return
     }
   }
-  view.buffer.setText(arts.map(a => lib.short(a)).join(" | "), -1);
+  view.buffer.setText(arts.sort().map(a => lib.short(a)).join(" | "), -1);
 }
 
   function addTracks() {
