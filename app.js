@@ -9,9 +9,15 @@ const App = function() {
   let player = null,
       app = null,
       st = {},
-      view = null;
-
-
+      view = null,
+      fontSize = {
+        tracks: 16,
+        albs: 20
+      },
+      color = {
+        tracks: 'blue',
+        albs: 'green'
+      };
 
   function run(thePlayer) {
     player = thePlayer
@@ -32,8 +38,7 @@ const App = function() {
     showArtists();
 
     let [art, alb, num] = lib.loadLast();
-
-    player.init();
+    player.init(view);
     mainloop.timeout_add(1000, function() {
       if (player.isPlaying())
         player.updatePosition();
@@ -43,7 +48,7 @@ const App = function() {
     if (num) {
       st.selArt = art;
       addAlbums();
-      selectAlbum(alb, num);
+      selectAlbum(alb, parseInt(num));
     }
   }
 
@@ -57,25 +62,25 @@ const App = function() {
       let key = Gdk.keyvalName(event.getKeyval()[1]);
       switch(key) {
       case 'Left':
-        switchTo('player')
+        view.switchTo('player')
         break;
       case 'Right':
-        switchTo('arts')
+        view.switchTo('arts')
         showArtists();
         break;
       case 'Down':
-        setVolume(-1);
+        player.volume(-1);
         break;
       case 'Up':
-        setVolume(1);
+        player.volume(1);
         break
       case 'space':
         player.changeState();
         break;
       case  'escape':
-        switchTo('player')
+        view.switchTo('player')
       default:
-        switchTo('arts');
+        view.switchTo('arts');
         return false;
       }
       return true;
@@ -86,34 +91,32 @@ const App = function() {
     st.alb = alb;
     st.art = st.selArt;
     st.albs = st.selAlbs;
-    write(view.labels.art, st.art, 24, 'blue');
-    write(view.labels.alb, lib.base(st.alb), 24, 'green');
-    player.playAlbum(path.join(st.arts[st.art], st.alb), tNum);
+    // set font from length
+    view.writeLabel('art', st.art);
+    view.writeLabel('alb', lib.base(st.alb));
+    player.loadAlbum(path.join(st.arts[st.art], st.alb));
     addTracks();
+    player.playTrack(tNum);
   }
 
 
-  function writeTrack(track) {
-    write(view.labels.track,  track, 24, 'blue');
-  }
+  function showArtists(entry = null) {
+    let arts = Object.keys(st.arts)
+    if (entry) {
+      // entry = entry.replace('-','_');
+      arts = arts.filter(
+        art => art.replace('_','-').toLowerCase().startsWith(entry)
+      );
 
-function showArtists(entry = null) {
-  let arts = Object.keys(st.arts)
-  if (entry) {
-    // entry = entry.replace('-','_');
-    arts = arts.filter(
-      art => art.replace('_','-').toLowerCase().startsWith(entry)
-    );
-
-    if (arts.length == 1) {
-      st.selArt = arts[0];
-      addAlbums();
-      switchTo('player');
-      return
+      if (arts.length == 1) {
+        st.selArt = arts[0];
+        addAlbums();
+        view.switchTo('player');
+        return
+      }
     }
+    view.buffer.setText(arts.sort().map(a => lib.short(a)).join(" | "), -1);
   }
-  view.buffer.setText(arts.sort().map(a => lib.short(a)).join(" | "), -1);
-}
 
   function addTracks() {
     for (let child of view.panes.tracks.getChildren())
@@ -121,10 +124,10 @@ function showArtists(entry = null) {
 
     let n = 0;
     for (let track of player.getTracks()) {
-      let btn = setButton(lib.shortBase(track, 25), 16, 'blue');
-      btn.on("clicked", selectTrack.bind(null, n));
+      let btn = view.setButton('tracks', lib.shortBase(track, 25), n);
+      btn.on("clicked", player.playTrack.bind(null, n));
       n++;
-      view.panes.tracks.insert(btn, -1);
+      view.panes.tracks.add(btn);
     }
     view.win.showAll();
   }
@@ -134,50 +137,22 @@ function showArtists(entry = null) {
     for (let child of view.panes.albs.getChildren())
       child.destroy();
 
+    let n = 0;
     for (let alb of st.selAlbs) {
-      let btn = setButton(lib.shortBase(alb), 20, 'green');
-      btn.on("clicked", selectAlbum.bind(null, alb, 0));
+      let btn = view.setButton('albs', lib.shortBase(alb), n);
+      btn.on("clicked", selectAlbum.bind(null, st.selAlbs[n], 0));
+      n++;
       view.panes.albs.add(btn);
     }
 
     view.win.showAll();
   }
 
-  const write = (lbl, txt, size, color) =>
-        lbl.setMarkup(`<span color='${color}' font='${size}'>${txt.replace('&','&amp;')}</span>`);
-
-  function setButton(txt, size, color) {
-    let lbl = new Gtk.Label();
-    write(lbl, txt, size, color);
-    let btn = new Gtk.Button();
-    btn.add(lbl);
-    return btn;
-  }
-
   function save(tNum, track) {
     lib.save([st.art, st.alb, tNum, track])
   }
 
-  function selectTrack(n) {
-    // change color
-    player.playTrack(n);
-  }
-
-  function switchTo(stack) {
-    view.stack.setVisibleChildName(stack);
-    view.search.bar.setSearchMode(stack == 'arts');
-  }
-
-  const setVolume = delta =>
-        write(view.labels.vol, `Level: ${player.volume(delta)} db`, 14, 'red');
-
-  function position(frac, txt) {
-    view.slider.fraction = frac;
-    view.slider.text = txt;
-  }
-
-
-  return {run, save, writeTrack, position}
+  return {run, save}
 }
 
 require('GLib').setPrgname('Audio Gnome');

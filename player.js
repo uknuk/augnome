@@ -6,6 +6,8 @@ const player = exports,
       time = (t) => new Date(t/1e6).toISOString().substr(14, 5),
       path2uri = p => `file://${p}`;
 
+let view = null;
+
 Gst.init(null, 0);
 
 player.Player = function(theApp) {
@@ -14,30 +16,28 @@ player.Player = function(theApp) {
       bin = Gst.ElementFactory.make("playbin", "play"),
       bus = bin.get_bus(),
       tracks: [],
-      tNum = 0;
+      tNum = null;
 
 
-  function init() {
+  function init(theView) {
+    view = theView;
     bus.addSignalWatch();
     bus.connect('message', function(bus, msg) {
       if (msg.type == Gst.MessageType.EOS) {
-        tNum++;
-        playTrack();
+        playTrack(tNum + 1);
       }
     });
   };
 
-  function playAlbum(alb, num) {
-    tracks = lib.loadTracks(alb);
-    playTrack(num);
-  };
+  const loadAlbum = alb => tracks = lib.loadTracks(alb);
 
-  function playTrack(num = null) {
-    if (num != null)
-      tNum = num;
+  function playTrack(num) {
+    view.changeColors('tracks', tNum, num);
+    tNum = num;
     let track = tracks[tNum];
     let base = path.basename(track)
-    app.writeTrack(base);
+    // update from track length
+    view.writeLabel('track', base);
     bin.set_state(Gst.State.NULL);
     bin.set_property('uri', path2uri(track));
     bin.set_state(Gst.State.PLAYING);
@@ -46,7 +46,8 @@ player.Player = function(theApp) {
 
   function updatePosition() {
     let d = [bin.query_position(Gst.Format.TIME)[1], bin.query_duration(Gst.Format.TIME)[1]]
-    app.position(d[0]/d[1], `${time(d[0])}/${time(d[1])}`);
+    view.slider.fraction = d[0]/d[1];
+    view.slider.text = `${time(d[0])}/${time(d[1])}`;
   };
 
   function changeState() {
@@ -68,10 +69,11 @@ player.Player = function(theApp) {
     let vol = Math.pow(10, db/10);
     if (vol < 10)
       bin.volume = vol;
-    return db.toFixed(0);
+    view.switchTo('player');
+    view.writeLabel('vol', `Level: ${db.toFixed(0)} db`);
   }
 
   const stop = () => bin.setState(Gst.State.NULL);
 
-  return { getTracks, init, isPlaying, updatePosition, playAlbum, playTrack, changeState, volume, stop }
+  return { getTracks, init, isPlaying, updatePosition, loadAlbum, playTrack, changeState, volume, stop }
 }

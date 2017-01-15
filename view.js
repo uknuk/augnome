@@ -3,6 +3,24 @@ const view = exports,
       Gdk = require('Gdk');
 
 view.View = function(app) {
+  const color = {
+    art: 'blue',
+    alb: 'green',
+    track: 'blue',
+    tracks: 'blue',
+    albs: 'green',
+    vol: 'red'
+  };
+
+  let fontSize = {
+    art: 24,
+    alb: 24,
+    track: 20,
+    tracks: 16,
+    albs: 20,
+    vol: 14
+  };
+
   let win = new Gtk.ApplicationWindow(
     { application: app,
       defaultHeight: 572,
@@ -28,7 +46,7 @@ view.View = function(app) {
 
 
   let panes = {
-    song: new Gtk.FlowBox(),
+    song: new Gtk.FlowBox({selectionMode: 0}), //NONE
     info: new Gtk.Box(),
     sep1: new Gtk.HSeparator(),
     albs: new Gtk.FlowBox({maxChildrenPerLine: 10}),
@@ -40,7 +58,7 @@ view.View = function(app) {
     frames.player.packStart(panes[p], false, false, 1);
   }
 
-  let labels = {}
+  let labels = {tracks: [], albs: []}
   for (let l of ['art', 'alb', 'track']) {
     labels[l] = new Gtk.Label();
     //panes.info.add(labels[l], false, false, 1);
@@ -83,5 +101,36 @@ view.View = function(app) {
 
   win.add(scroll);
 
-  return {win, scroll, stack, switcher, labels, panes, frames, header, buffer, search, slider}
+  const write = (lbl, txt, size, color) =>
+        lbl.setMarkup(`<span color='${color}' font='${size}'>${txt.replace('&','&amp;')}</span>`);
+
+  const writeLabel = (type, txt) => write(labels[type], txt, fontSize[type], color[type])
+
+  function setButton(type, txt, n) {
+    let lbl = new Gtk.Label();
+    labels[type][n] = lbl;
+    write(lbl, txt, fontSize[type], color[type]);
+    let btn = new Gtk.Button();
+    btn.add(lbl);
+    return btn;
+  }
+
+  const changeColor = (type, n, from, to) => {
+    labels[type][n].setMarkup(labels[type][n].label.replace(from, to));
+  }
+
+  function changeColors(type, prev, next) {
+    if (prev)
+      changeColor(type, prev, "'red'", `'${color[type]}'`);
+    changeColor(type, next, `'${color[type]}'` , "'red'");
+  }
+
+  function switchTo(name) {
+    stack.setVisibleChildName(name);
+    search.bar.setSearchMode(name == 'arts');
+  }
+
+
+  return {win, scroll, stack, switcher, labels, panes, frames, header, buffer, search, slider, fontSize,
+          setButton, changeColors, writeLabel, switchTo}
 }
