@@ -17,7 +17,7 @@ view.View = function(app) {
   let buffer = new Gtk.TextBuffer();
 
   let css = new Gtk.CssProvider();
-  css.loadFromData("* { font-size: 11px; font-weight: bold; color: blue; }");
+  css.loadFromData("GtkTextView { font-size: 11px; font-weight: bold; color: #a00; }");
 
   let frames = {
     player: new Gtk.Box({orientation: Gtk.Orientation.VERTICAL}),
@@ -28,8 +28,8 @@ view.View = function(app) {
 
 
   let panes = {
-    info: new Gtk.FlowBox(),
-    slider: new Gtk.Box(),
+    song: new Gtk.FlowBox(),
+    info: new Gtk.Box(),
     sep1: new Gtk.HSeparator(),
     albs: new Gtk.FlowBox({maxChildrenPerLine: 10}),
     sep2: new Gtk.HSeparator(),
@@ -44,14 +44,19 @@ view.View = function(app) {
   for (let l of ['art', 'alb', 'track']) {
     labels[l] = new Gtk.Label();
     //panes.info.add(labels[l], false, false, 1);
-    panes.info.add(labels[l]);
+    panes.song.add(labels[l]);
   }
 
-  labels.pos = new Gtk.Label();
-  panes.slider.add(labels.pos, false, false, 1);
+  // labels.pos = new Gtk.Label();
+  // panes.info.add(labels.pos, false, false, 1);
 
   labels.vol = new Gtk.Label();
-  panes.slider.add(labels.vol, false, false, 1);
+  panes.info.packEnd(labels.vol, false, false, 1);
+
+  let slider = new Gtk.ProgressBar({showText: true});
+  panes.info.packStart(slider, true, true, 1);
+
+
 
   let stack = new Gtk.Stack()
   stack.addTitled(frames.player, "player", "Player");
@@ -78,5 +83,5 @@ view.View = function(app) {
 
   win.add(scroll);
 
-  return {win, scroll, stack, switcher, labels, panes, frames, header, buffer, search}
+  return {win, scroll, stack, switcher, labels, panes, frames, header, buffer, search, slider}
 }

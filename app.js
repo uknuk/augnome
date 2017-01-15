@@ -33,7 +33,7 @@ const App = function() {
 
     let [art, alb, num] = lib.loadLast();
 
-    player.init(view);
+    player.init();
     mainloop.timeout_add(1000, function() {
       if (player.isPlaying())
         player.updatePosition();
@@ -64,10 +64,10 @@ const App = function() {
         showArtists();
         break;
       case 'Down':
-        setVolume(-0.1);
+        setVolume(-1);
         break;
       case 'Up':
-        setVolume(0.1);
+        setVolume(1);
         break
       case 'space':
         player.changeState();
@@ -144,7 +144,7 @@ function showArtists(entry = null) {
   }
 
   const write = (lbl, txt, size, color) =>
-        lbl.setMarkup(`<span color='${color}' font='${size}'>${txt}</span>`);
+        lbl.setMarkup(`<span color='${color}' font='${size}'>${txt.replace('&','&amp;')}</span>`);
 
   function setButton(txt, size, color) {
     let lbl = new Gtk.Label();
@@ -169,10 +169,15 @@ function showArtists(entry = null) {
   }
 
   const setVolume = delta =>
-        write(view.labels.vol, Math.ceil(player.volume(delta)*100), 16, 'red');
+        write(view.labels.vol, `Level: ${player.volume(delta)} db`, 14, 'red');
+
+  function position(frac, txt) {
+    view.slider.fraction = frac;
+    view.slider.text = txt;
+  }
 
 
-  return {run, save, writeTrack}
+  return {run, save, writeTrack, position}
 }
 
 require('GLib').setPrgname('Audio Gnome');

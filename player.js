@@ -3,7 +3,7 @@ const player = exports,
       fs = require('fs'),
       path = require('path'),
       lib = require('./lib'),
-      time = r => r[0] ? new Date(r[1]/1e6).toISOString().substr(14, 5) : "00:00",
+      time = (t) => new Date(t/1e6).toISOString().substr(14, 5),
       path2uri = p => `file://${p}`;
 
 Gst.init(null, 0);
@@ -13,13 +13,11 @@ player.Player = function(theApp) {
   let app = theApp,
       bin = Gst.ElementFactory.make("playbin", "play"),
       bus = bin.get_bus(),
-      view = null,
       tracks: [],
       tNum = 0;
 
 
-  function init(theView) {
-    view = theView;
+  function init() {
     bus.addSignalWatch();
     bus.connect('message', function(bus, msg) {
       if (msg.type == Gst.MessageType.EOS) {
@@ -47,11 +45,8 @@ player.Player = function(theApp) {
   };
 
   function updatePosition() {
-    var  d = [
-      time(bin.query_position(Gst.Format.TIME)),
-      time(bin.query_duration(Gst.Format.TIME))
-    ];
-    view.labels.pos.label = `${d[0]} ${d[1]}`;
+    let d = [bin.query_position(Gst.Format.TIME)[1], bin.query_duration(Gst.Format.TIME)[1]]
+    app.position(d[0]/d[1], `${time(d[0])}/${time(d[1])}`);
   };
 
   function changeState() {
@@ -68,9 +63,12 @@ player.Player = function(theApp) {
   const getTracks = () => tracks;
 
   function volume(delta) {
-    if (bin.volume < 10 && bin.volume > 0.1)
-      bin.volume += delta;
-    return bin.volume;
+    let db = Math.log(bin.volume)*Math.LOG10E*10 + delta;
+    // Math.log10 is not available
+    let vol = Math.pow(10, db/10);
+    if (vol < 10)
+      bin.volume = vol;
+    return db.toFixed(0);
   }
 
   const stop = () => bin.setState(Gst.State.NULL);
