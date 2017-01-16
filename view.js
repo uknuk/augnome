@@ -9,7 +9,8 @@ view.View = function(app) {
     track: 'blue',
     tracks: 'blue',
     albs: 'green',
-    vol: 'red'
+    vol: 'red',
+    rate: 'blue'
   };
 
   let fontSize = {
@@ -18,7 +19,8 @@ view.View = function(app) {
     track: 20,
     tracks: 16,
     albs: 20,
-    vol: 14
+    vol: 14,
+    rate: 14
   };
 
   let win = new Gtk.ApplicationWindow(
@@ -61,15 +63,15 @@ view.View = function(app) {
   let labels = {tracks: [], albs: []}
   for (let l of ['art', 'alb', 'track']) {
     labels[l] = new Gtk.Label();
-    //panes.info.add(labels[l], false, false, 1);
     panes.song.add(labels[l]);
   }
 
-  // labels.pos = new Gtk.Label();
-  // panes.info.add(labels.pos, false, false, 1);
 
   labels.vol = new Gtk.Label();
   panes.info.packEnd(labels.vol, false, false, 1);
+
+  labels.rate = new Gtk.Label();
+  panes.info.packEnd(labels.rate, false, false, 1);
 
   let slider = new Gtk.ProgressBar({showText: true});
   panes.info.packStart(slider, true, true, 1);

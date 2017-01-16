@@ -9,15 +9,8 @@ const App = function() {
   let player = null,
       app = null,
       st = {},
-      view = null,
-      fontSize = {
-        tracks: 16,
-        albs: 20
-      },
-      color = {
-        tracks: 'blue',
-        albs: 'green'
-      };
+      view = null;
+
 
   function run(thePlayer) {
     player = thePlayer
@@ -40,15 +33,15 @@ const App = function() {
     let [art, alb, num] = lib.loadLast();
     player.init(view);
     mainloop.timeout_add(1000, function() {
-      if (player.isPlaying())
-        player.updatePosition();
+      player.updatePosition();
       return true;
     });
 
     if (num) {
       st.selArt = art;
       addAlbums();
-      selectAlbum(alb, parseInt(num));
+      let aNum = st.selAlbs.indexOf(alb);
+      selectAlbum(aNum, parseInt(num));
     }
   }
 
@@ -87,12 +80,13 @@ const App = function() {
     });
   }
 
-  function selectAlbum(alb, tNum) {
-    st.alb = alb;
+  function selectAlbum(aNum, tNum) {
+    st.aNum = aNum;
     st.art = st.selArt;
     st.albs = st.selAlbs;
     // set font from length
     view.writeLabel('art', st.art);
+    st.alb = st.albs[st.aNum];
     view.writeLabel('alb', lib.base(st.alb));
     player.loadAlbum(path.join(st.arts[st.art], st.alb));
     addTracks();
@@ -116,6 +110,7 @@ const App = function() {
       }
     }
     view.buffer.setText(arts.sort().map(a => lib.short(a)).join(" | "), -1);
+    view.win.showAll();
   }
 
   function addTracks() {
@@ -140,7 +135,7 @@ const App = function() {
     let n = 0;
     for (let alb of st.selAlbs) {
       let btn = view.setButton('albs', lib.shortBase(alb), n);
-      btn.on("clicked", selectAlbum.bind(null, st.selAlbs[n], 0));
+      btn.on("clicked", selectAlbum.bind(null, n, 0));
       n++;
       view.panes.albs.add(btn);
     }

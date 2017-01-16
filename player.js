@@ -16,6 +16,8 @@ player.Player = function(theApp) {
       bin = Gst.ElementFactory.make("playbin", "play"),
       bus = bin.get_bus(),
       tracks: [],
+      duration = 0,
+      bitrate = 0,
       tNum = null;
 
 
@@ -23,6 +25,15 @@ player.Player = function(theApp) {
     view = theView;
     bus.addSignalWatch();
     bus.connect('message', function(bus, msg) {
+
+      if (msg.type == Gst.MessageType.TAG) {
+        let rate = msg.parse_tag().get_uint('bitrate')[1];
+        if (rate != bitrate) {
+          bitrate = rate;
+          view.writeLabel('rate', ` Bitrate: ${bitrate/1e3.toFixed(0)} kbps `);
+        }
+      }
+
       if (msg.type == Gst.MessageType.EOS) {
         playTrack(tNum + 1);
       }
@@ -45,9 +56,15 @@ player.Player = function(theApp) {
   };
 
   function updatePosition() {
-    let d = [bin.query_position(Gst.Format.TIME)[1], bin.query_duration(Gst.Format.TIME)[1]]
-    view.slider.fraction = d[0]/d[1];
-    view.slider.text = `${time(d[0])}/${time(d[1])}`;
+    if (!isPlaying())
+      return;
+
+    if (!duration)
+      duration =  bin.query_duration(Gst.Format.TIME)[1];
+
+    let pos = bin.query_position(Gst.Format.TIME)[1];
+    view.slider.fraction = pos/duration;
+    view.slider.text = `${time(pos)}/${time(duration)}`;
   };
 
   function changeState() {
@@ -70,10 +87,10 @@ player.Player = function(theApp) {
     if (vol < 10)
       bin.volume = vol;
     view.switchTo('player');
-    view.writeLabel('vol', `Level: ${db.toFixed(0)} db`);
+    view.writeLabel('vol', ` Level: ${db.toFixed(0)} db `);
   }
 
   const stop = () => bin.setState(Gst.State.NULL);
 
-  return { getTracks, init, isPlaying, updatePosition, loadAlbum, playTrack, changeState, volume, stop }
+  return { getTracks, init, updatePosition, loadAlbum, playTrack, changeState, volume, stop }
 }
