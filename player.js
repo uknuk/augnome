@@ -35,7 +35,11 @@ player.Player = function(theApp) {
       }
 
       if (msg.type == Gst.MessageType.EOS) {
-        playTrack(tNum + 1);
+        let next = tNum + 1;
+        if (next == tracks.length)
+          app.nextAlbum();
+        else
+          playTrack(next);
       }
     });
   };
@@ -47,9 +51,10 @@ player.Player = function(theApp) {
     tNum = num;
     let track = tracks[tNum];
     let base = path.basename(track)
-    // update from track length
+    view.setFont('track', lib.fontSize(base, 'info'));
     view.writeLabel('track', base);
     bin.set_state(Gst.State.NULL);
+    duration = 0;
     bin.set_property('uri', path2uri(track));
     bin.set_state(Gst.State.PLAYING);
     app.save(tNum, base);

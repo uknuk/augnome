@@ -37,7 +37,7 @@ view.View = function(app) {
   let buffer = new Gtk.TextBuffer();
 
   let css = new Gtk.CssProvider();
-  css.loadFromData("GtkTextView { font-size: 11px; font-weight: bold; color: #a00; }");
+  css.loadFromData("GtkTextView { font-size: 16px; font-weight: bold; color: #a00; }");
 
   let frames = {
     player: new Gtk.Box({orientation: Gtk.Orientation.VERTICAL}),
@@ -76,8 +76,6 @@ view.View = function(app) {
   let slider = new Gtk.ProgressBar({showText: true});
   panes.info.packStart(slider, true, true, 1);
 
-
-
   let stack = new Gtk.Stack()
   stack.addTitled(frames.player, "player", "Player");
   stack.addTitled(frames.arts, "arts", "Artists");
@@ -98,10 +96,10 @@ view.View = function(app) {
   search.bar.add(search.entry);
   header.add(search.bar);
 
-  let scroll = new Gtk.ScrolledWindow();
-  scroll.add(stack);
+  let scrollWin = new Gtk.ScrolledWindow();
+  scrollWin.add(stack);
 
-  win.add(scroll);
+  win.add(scrollWin);
 
   const write = (lbl, txt, size, color) =>
         lbl.setMarkup(`<span color='${color}' font='${size}'>${txt.replace('&','&amp;')}</span>`);
@@ -132,7 +130,22 @@ view.View = function(app) {
     search.bar.setSearchMode(name == 'arts');
   }
 
+  function setFont(type, size) {
+    print(size);
+    if (type == 'rec')
+      fontSize.alb = fontSize.art = size;
+    else
+      fontSize[type] = size;
+  }
 
-  return {win, scroll, stack, switcher, labels, panes, frames, header, buffer, search, slider, fontSize,
-          setButton, changeColors, writeLabel, switchTo}
+  function scroll(dir) {
+    let adjust = scrollWin.vadjustment;
+    adjust.value += (dir == 'Down' ? adjust.pageSize : -adjust.pageSize);
+  }
+
+
+
+
+  return {win, stack, switcher, labels, panes, frames, header, buffer, search, slider, fontSize,
+          setButton, changeColors, writeLabel, switchTo, setFont, scroll}
 }

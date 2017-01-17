@@ -6,6 +6,7 @@ const Gtk = require('Gtk'),
 
 
 const App = function() {
+
   let player = null,
       app = null,
       st = {},
@@ -61,17 +62,21 @@ const App = function() {
         view.switchTo('arts')
         showArtists();
         break;
+      case 'Up':
       case 'Down':
+        view.scroll(key);
+        break;
+      case 'F11':
         player.volume(-1);
         break;
-      case 'Up':
+      case 'F12':
         player.volume(1);
         break
       case 'space':
         player.changeState();
         break;
       case  'escape':
-        view.switchTo('player')
+        search.bar.setSearchMode(false);
       default:
         view.switchTo('arts');
         return false;
@@ -81,16 +86,27 @@ const App = function() {
   }
 
   function selectAlbum(aNum, tNum) {
-    st.aNum = aNum;
     st.art = st.selArt;
     st.albs = st.selAlbs;
-    // set font from length
+    playAlbum(aNum, tNum);
+  }
+
+  function playAlbum(aNum, tNum = 0) {
+    view.changeColors('albs', st.aNum, aNum);
+    st.aNum = aNum;
+    view.setFont('rec', lib.fontSize(st.art + st.alb, 'info'));
     view.writeLabel('art', st.art);
     st.alb = st.albs[st.aNum];
     view.writeLabel('alb', lib.base(st.alb));
     player.loadAlbum(path.join(st.arts[st.art], st.alb));
-    addTracks();
+    addButtons('tracks', player.getTracks(), 25, player.playTrack);
     player.playTrack(tNum);
+  }
+
+  function nextAlbum() {
+    let next = st.aNum + 1;
+    if (next < st.albs.length)
+      playAlbum(next);
   }
 
 
@@ -113,31 +129,21 @@ const App = function() {
     view.win.showAll();
   }
 
-  function addTracks() {
-    for (let child of view.panes.tracks.getChildren())
-      child.destroy();
-
-    let n = 0;
-    for (let track of player.getTracks()) {
-      let btn = view.setButton('tracks', lib.shortBase(track, 25), n);
-      btn.on("clicked", player.playTrack.bind(null, n));
-      n++;
-      view.panes.tracks.add(btn);
-    }
-    view.win.showAll();
-  }
-
   function addAlbums() {
     st.selAlbs = lib.loadAlbums(st.arts[st.selArt]);
-    for (let child of view.panes.albs.getChildren())
+    addButtons('albs', st.selAlbs, 40, selectAlbum);
+  }
+
+  function addButtons(type, labels, length, fun) {
+    for (let child of view.panes[type].getChildren())
       child.destroy();
 
     let n = 0;
-    for (let alb of st.selAlbs) {
-      let btn = view.setButton('albs', lib.shortBase(alb), n);
-      btn.on("clicked", selectAlbum.bind(null, n, 0));
+    for (let lbl of labels) {
+      let btn = view.setButton(type, lib.shortBase(lbl, length), n);
+      btn.on("clicked", fun.bind(null, n, 0));
       n++;
-      view.panes.albs.add(btn);
+      view.panes[type].add(btn);
     }
 
     view.win.showAll();
@@ -147,7 +153,7 @@ const App = function() {
     lib.save([st.art, st.alb, tNum, track])
   }
 
-  return {run, save}
+  return {run, save, nextAlbum}
 }
 
 require('GLib').setPrgname('Audio Gnome');
