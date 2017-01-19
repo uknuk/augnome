@@ -75,8 +75,11 @@ const App = function() {
       case 'space':
         player.changeState();
         break;
-      case  'escape':
-        search.bar.setSearchMode(false);
+      case 'Escape':
+        st.selArt = st.art;
+        addAlbums();
+        view.switchTo('player');
+        break;
       default:
         view.switchTo('arts');
         return false;
@@ -94,12 +97,14 @@ const App = function() {
   function playAlbum(aNum, tNum = 0) {
     view.changeColors('albs', st.aNum, aNum);
     st.aNum = aNum;
-    view.setFont('rec', lib.fontSize(st.art + st.alb, 'info'));
+    view.setFont('rec', lib.fontSize((st.art + st.alb).length, 'info'));
     view.writeLabel('art', st.art);
     st.alb = st.albs[st.aNum];
     view.writeLabel('alb', lib.base(st.alb));
     player.loadAlbum(path.join(st.arts[st.art], st.alb));
-    addButtons('tracks', player.getTracks(), 25, player.playTrack);
+    let tracks = player.getTracks().map(t => lib.shortBase(t, 25));
+    setFont('tracks',tracks);
+    addButtons('tracks', tracks, player.playTrack);
     player.playTrack(tNum);
   }
 
@@ -130,17 +135,21 @@ const App = function() {
   }
 
   function addAlbums() {
+    print(st.selArt);
     st.selAlbs = lib.loadAlbums(st.arts[st.selArt]);
-    addButtons('albs', st.selAlbs, 40, selectAlbum);
+    print(st.selAlbs);
+    let albs = st.selAlbs.map(alb => lib.shortBase(alb, 40));
+    setFont('albs', albs);
+    addButtons('albs', albs, selectAlbum);
   }
 
-  function addButtons(type, labels, length, fun) {
+  function addButtons(type, labels, fun) {
     for (let child of view.panes[type].getChildren())
       child.destroy();
 
     let n = 0;
     for (let lbl of labels) {
-      let btn = view.setButton(type, lib.shortBase(lbl, length), n);
+      let btn = view.setButton(type, lbl, n);
       btn.on("clicked", fun.bind(null, n, 0));
       n++;
       view.panes[type].add(btn);
@@ -152,6 +161,9 @@ const App = function() {
   function save(tNum, track) {
     lib.save([st.art, st.alb, tNum, track])
   }
+
+  const setFont = (type, items) =>
+      view.setFont(type, lib.fontSize(items.reduce((s, n) => s + n.length, 0), type));
 
   return {run, save, nextAlbum}
 }

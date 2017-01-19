@@ -4,7 +4,9 @@ const lib = exports,
       ext = /\.mp3$|\.mp4a$|\.mpc$|\.ogg$/,
       lastFile = path.join(process.env['HOME'],'.rlast'),
       font = {
-        info: [24, 12, 20]
+        info: [24, 12, 20, 5],
+        albs: [20, 12, 40, 10],
+        tracks: [18, 10, 100, 40]
       };
 
 
@@ -89,8 +91,8 @@ lib.shortBase = (name, limit = 40) => lib.cut(lib.base(name), limit);
 
 lib.short = (name, limit = 20) => name.substring(0, lib.cut(name, limit).length)
 
-lib.fontSize = function(txt, type) {
-  print(txt.length);
+lib.fontSize = function(length, type) {
+  // print(`${type}: ${length}`);
   let f = font[type];
-  return Math.max(f[0] - (txt.length - f[2])/5, f[1]).toFixed(0);
+  return Math.max(f[0] - (length - f[2])/f[3], f[1]).toFixed(0);
 }

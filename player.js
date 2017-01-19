@@ -30,7 +30,7 @@ player.Player = function(theApp) {
         let rate = msg.parse_tag().get_uint('bitrate')[1];
         if (rate != bitrate) {
           bitrate = rate;
-          view.writeLabel('rate', ` Bitrate: ${bitrate/1e3.toFixed(0)} kbps `);
+          view.writeLabel('rate', ` ${(bitrate/1e3).toFixed(0)} kbps `);
         }
       }
 
@@ -51,7 +51,7 @@ player.Player = function(theApp) {
     tNum = num;
     let track = tracks[tNum];
     let base = path.basename(track)
-    view.setFont('track', lib.fontSize(base, 'info'));
+    view.setFont('track', lib.fontSize(base.length, 'info'));
     view.writeLabel('track', base);
     bin.set_state(Gst.State.NULL);
     duration = 0;
@@ -92,7 +92,7 @@ player.Player = function(theApp) {
     if (vol < 10)
       bin.volume = vol;
     view.switchTo('player');
-    view.writeLabel('vol', ` Level: ${db.toFixed(0)} db `);
+    view.writeLabel('vol', ` ${db.toFixed(0)} db `);
   }
 
   const stop = () => bin.setState(Gst.State.NULL);
