@@ -81,7 +81,6 @@ const App = function() {
         view.switchTo('player');
         break;
       default:
-        view.switchTo('arts');
         return false;
       }
       return true;
@@ -118,10 +117,14 @@ const App = function() {
   function showArtists(entry = null) {
     let arts = Object.keys(st.arts)
     if (entry) {
-      // entry = entry.replace('-','_');
-      arts = arts.filter(
-        art => art.replace('_','-').toLowerCase().startsWith(entry)
-      );
+      if (entry.slice(-1) == '§') {
+        let sel = entry.slice(0, -1);
+        arts = arts.filter(art => art.toLowerCase() == sel)
+      }
+      else
+        arts = arts.filter(
+          art => art.replace('_','-').toLowerCase().startsWith(entry)
+        );
 
       if (arts.length == 1) {
         st.selArt = arts[0];
@@ -135,9 +138,9 @@ const App = function() {
   }
 
   function addAlbums() {
-    print(st.selArt);
+    //print(st.selArt);
     st.selAlbs = lib.loadAlbums(st.arts[st.selArt]);
-    print(st.selAlbs);
+    //print(st.selAlbs);
     let albs = st.selAlbs.map(alb => lib.shortBase(alb, 40));
     setFont('albs', albs);
     addButtons('albs', albs, selectAlbum);

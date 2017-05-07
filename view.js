@@ -131,7 +131,7 @@ view.View = function(app) {
   }
 
   function setFont(type, size) {
-    print(size);
+    //print(size);
     if (type == 'rec')
       fontSize.alb = fontSize.art = size;
     else
