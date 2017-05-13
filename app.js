@@ -80,6 +80,11 @@ const App = function() {
         addAlbums();
         view.switchTo('player');
         break;
+      case 'F1':
+        st.arts = lib.loadArtists();
+        if (view.stack.visibleChildName == "arts")
+          showArtists();
+        break;
       default:
         return false;
       }
