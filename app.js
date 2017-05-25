@@ -106,8 +106,10 @@ const App = function() {
     st.alb = st.albs[st.aNum];
     view.writeLabel('alb', lib.base(st.alb));
     player.loadAlbum(path.join(st.arts[st.art], st.alb));
-    let tracks = player.getTracks().map(t => lib.shortBase(t, 25));
-    setFont('tracks',tracks);
+    let tracks = getTracks();
+    let fSize = getFont([null, tracks]);
+    print(fSize);
+    view.setFont('tracks', fSize);
     addButtons('tracks', tracks, player.playTrack);
     player.playTrack(tNum);
   }
@@ -146,8 +148,10 @@ const App = function() {
     //print(st.selArt);
     st.selAlbs = lib.loadAlbums(st.arts[st.selArt]);
     //print(st.selAlbs);
-    let albs = st.selAlbs.map(alb => lib.shortBase(alb, 40));
-    setFont('albs', albs);
+    let albs = getAlbs();
+    let fSize = getFont([albs, null]);
+    print(fSize);
+    view.setFont('albs', fSize);
     addButtons('albs', albs, selectAlbum);
   }
 
@@ -170,8 +174,24 @@ const App = function() {
     lib.save([st.art, st.alb, tNum, track])
   }
 
-  const setFont = (type, items) =>
-      view.setFont(type, lib.fontSize(items.reduce((s, n) => s + n.length, 0), type));
+  function getFont(items) {
+    if (!items[0])
+      items[0] = getAlbs();
+    if (!items[1])
+      items[1] = getTracks();
+
+    let sizes = items.map(item => item.reduce((s, n) => s + n.length, 0));
+    print(sizes);
+    return lib.fontSize(sizes[0] + sizes[1], 'items')
+  }
+
+  const getAlbs = () => st.selAlbs.map(alb => lib.shortBase(alb, 40));
+
+  function getTracks() {
+    let tracks = player.getTracks();
+    return tracks ?  tracks.map(t => lib.shortBase(t, 25)) : []
+  }
+
 
   return {run, save, nextAlbum}
 }

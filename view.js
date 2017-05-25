@@ -120,7 +120,7 @@ view.View = function(app) {
   }
 
   function changeColors(type, prev, next) {
-    if (prev)
+    if (prev != null)
       changeColor(type, prev, "'red'", `'${color[type]}'`);
     changeColor(type, next, `'${color[type]}'` , "'red'");
   }

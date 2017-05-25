@@ -5,6 +5,7 @@ const lib = exports,
       lastFile = path.join(process.env['HOME'],'.rlast'),
       font = {
         info: [24, 12, 20, 5],
+        items: [20, 10, 100, 40],
         albs: [20, 12, 40, 10],
         tracks: [18, 10, 100, 40]
       };
