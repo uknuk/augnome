@@ -134,9 +134,10 @@ const App = function() {
         );
 
       if (arts.length == 1) {
-        st.selArt = arts[0];
-        addAlbums();
-        view.switchTo('player');
+        showArtist(arts[0])
+        // st.selArt = arts[0];
+        // addAlbums();
+        // view.switchTo('player');
         return;
       }
       else {
@@ -152,12 +153,13 @@ const App = function() {
     view.win.showAll();
   }
 
-  function selectArtist(num) {
-    st.selArt = st.selArts[num];
+  function showArtist(art) {
+    st.selArt = art;
     addAlbums();
     view.switchTo('player')
   }
 
+  const selectArtist = num => showArtist(st.selArts[num]);
 
   function addAlbums() {
     st.selAlbs = lib.loadAlbums(st.arts[st.selArt]);
