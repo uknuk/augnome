@@ -5,6 +5,7 @@ const view = exports,
 view.View = function(app) {
   const color = {
     art: 'blue',
+    selArts: 'blue',
     alb: 'green',
     track: 'blue',
     tracks: 'blue',
@@ -20,7 +21,8 @@ view.View = function(app) {
     tracks: 16,
     albs: 20,
     vol: 14,
-    rate: 14
+    rate: 14,
+    selArts: 24
   };
 
   let win = new Gtk.ApplicationWindow(
@@ -41,11 +43,17 @@ view.View = function(app) {
 
   let frames = {
     player: new Gtk.Box({orientation: Gtk.Orientation.VERTICAL}),
-    arts: new Gtk.TextView({buffer: buffer, wrapMode: Gtk.WrapMode.WORD}),
+    arts: new Gtk.Box({orientation: Gtk.Orientation.VERTICAL})
+    //arts: new Gtk.TextView({buffer: buffer, wrapMode: Gtk.WrapMode.WORD}),
   }
 
-  frames.arts.getStyleContext().addProvider(css, 0);
+  let selArts = new Gtk.FlowBox({maxChildrenPerLine: 10});
+  let text = new Gtk.TextView({buffer: buffer, wrapMode: Gtk.WrapMode.WORD});
 
+  text.getStyleContext().addProvider(css, 0);
+
+  frames.arts.packStart(selArts, false, false, 1);
+  frames.arts.packStart(text, false, false, 1);
 
   let panes = {
     song: new Gtk.FlowBox({selectionMode: 0}), //NONE
@@ -60,7 +68,9 @@ view.View = function(app) {
     frames.player.packStart(panes[p], false, false, 1);
   }
 
-  let labels = {tracks: [], albs: []}
+  panes.selArts = selArts;
+
+  let labels = {tracks: [], albs: [], selArts: []}
   for (let l of ['art', 'alb', 'track']) {
     labels[l] = new Gtk.Label();
     panes.song.add(labels[l]);

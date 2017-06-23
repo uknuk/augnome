@@ -98,6 +98,7 @@ const App = function() {
     playAlbum(aNum, tNum);
   }
 
+
   function playAlbum(aNum, tNum = 0) {
     view.changeColors('albs', st.aNum, aNum);
     st.aNum = aNum;
@@ -108,7 +109,6 @@ const App = function() {
     player.loadAlbum(path.join(st.arts[st.art], st.alb));
     let tracks = getTracks();
     let fSize = getFont([null, tracks]);
-    print(fSize);
     view.setFont('tracks', fSize);
     addButtons('tracks', tracks, player.playTrack);
     player.playTrack(tNum);
@@ -137,27 +137,38 @@ const App = function() {
         st.selArt = arts[0];
         addAlbums();
         view.switchTo('player');
-        return
+        return;
+      }
+      else {
+        st.selArts = arts;
+        addButtons('selArts', arts, selectArtist);
       }
     }
-    view.buffer.setText(arts.sort().map(a => lib.short(a)).join(" | "), -1);
+    else
+      clear('selArts');
+
+    let text =  entry ? '' : arts.sort().map(a => lib.short(a)).join(" | ");
+    view.buffer.setText(text, -1);
     view.win.showAll();
   }
 
+  function selectArtist(num) {
+    st.selArt = st.selArts[num];
+    addAlbums();
+    view.switchTo('player')
+  }
+
+
   function addAlbums() {
-    //print(st.selArt);
     st.selAlbs = lib.loadAlbums(st.arts[st.selArt]);
-    //print(st.selAlbs);
     let albs = getAlbs();
     let fSize = getFont([albs, null]);
-    print(fSize);
     view.setFont('albs', fSize);
     addButtons('albs', albs, selectAlbum);
   }
 
   function addButtons(type, labels, fun) {
-    for (let child of view.panes[type].getChildren())
-      child.destroy();
+    clear(type);
 
     let n = 0;
     for (let lbl of labels) {
@@ -174,6 +185,11 @@ const App = function() {
     lib.save([st.art, st.alb, tNum, track])
   }
 
+  function clear(type) {
+    for (let child of view.panes[type].getChildren())
+      child.destroy();
+  }
+
   function getFont(items) {
     if (!items[0])
       items[0] = getAlbs();
@@ -181,7 +197,6 @@ const App = function() {
       items[1] = getTracks();
 
     let sizes = items.map(item => item.reduce((s, n) => s + n.length, 0));
-    print(sizes);
     return lib.fontSize(sizes[0] + sizes[1], 'items')
   }
 
