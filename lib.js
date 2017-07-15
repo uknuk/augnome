@@ -6,7 +6,7 @@ const lib = exports,
       // max(f[0] - (length - f[2])/f[3], f[1])
       font = {
         info: [24, 12, 20, 5],
-        items: [20, 10, 100, 40],
+        items: [20, 12, 100, 40],
         albs: [20, 12, 40, 10],
         tracks: [18, 10, 100, 40]
       };
@@ -57,11 +57,7 @@ lib.loadAlbums = function(art) {
         yb = ib.match(re);
 
     if (ya && yb)
-    {
-      print(ya);
-      print(yb);
       return ya - yb;
-    }
 
     return ia === ib ? 0 : ia > ib ? 1 : -1;
   });
