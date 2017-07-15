@@ -3,6 +3,7 @@ const lib = exports,
       fs = require('fs'),
       ext = /\.mp3$|\.mp4a$|\.mpc$|\.ogg$/,
       lastFile = path.join(process.env['HOME'],'.rlast'),
+      // max(f[0] - (length - f[2])/f[3], f[1])
       font = {
         info: [24, 12, 20, 5],
         items: [20, 10, 100, 40],
@@ -39,19 +40,34 @@ lib.loadArtists = function() {
 }();
 
 lib.loadAlbums = function(art) {
-  return fs.readdirSync(art).sort(function(alb) {
+  var issued = function(alb) {
     var re = /^\d{2}[\s+|_|-]/;
     if (alb.substr(0,2) == 'M0')
       return alb.replace('M0', '200');
 
     var year = alb.match(re);
-    if (year)
-      return year[0].substr(0,2) < 30 ? '20' + alb : '19' + alb;
-    // works until 2030
+    return year ? year[0].substr(0,2) < 30 ? '20' + alb : '19' + alb : alb;
+  }
 
-    return alb;
+  return fs.readdirSync(art).sort((a, b) => {
+    var re = /^\d{4}/,
+        ia = issued(a),
+        ib = issued(b),
+        ya = ia.match(re),
+        yb = ib.match(re);
+
+    if (ya && yb)
+    {
+      print(ya);
+      print(yb);
+      return ya - yb;
+    }
+
+    return ia === ib ? 0 : ia > ib ? 1 : -1;
   });
+
 };
+
 
 lib.loadTracks = function(alb) {
   return fs.statSync(alb).isFile() ? [alb] : this.loadAlbum(alb);

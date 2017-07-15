@@ -135,9 +135,6 @@ const App = function() {
 
       if (arts.length == 1) {
         showArtist(arts[0])
-        // st.selArt = arts[0];
-        // addAlbums();
-        // view.switchTo('player');
         return;
       }
       else {
