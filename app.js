@@ -106,6 +106,7 @@ const App = function() {
     view.writeLabel('art', st.art);
     st.alb = st.albs[st.aNum];
     view.writeLabel('alb', lib.base(st.alb));
+    view.writeLabel("selArt", "");
     player.loadAlbum(path.join(st.arts[st.art], st.alb));
     let tracks = getTracks();
     let fSize = getFont([null, tracks]);
@@ -139,6 +140,7 @@ const App = function() {
       }
       else {
         st.selArts = arts;
+        view.setFont('selArts', lib.fontSize(arts.reduce((s, n) => s + n.length, 0), 'items'))
         addButtons('selArts', arts, selectArtist);
       }
     }
@@ -152,6 +154,8 @@ const App = function() {
 
   function showArtist(art) {
     st.selArt = art;
+    if (st.selArt != st.art)
+      view.writeLabel("selArt", st.selArt + ":");
     addAlbums();
     view.switchTo('player')
   }
