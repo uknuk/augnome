@@ -50,11 +50,22 @@ lib.loadAlbums = function(art) {
   }
 
   return fs.readdirSync(art).sort((a, b) => {
-    var re = /^\d{4}/,
+
+    if (a.substr(0,2) == 'Op' && b.substr(0,2) == 'Op') {
+      let re = /^\d{2,3}/,
+          oa = a.replace(/^Op/,'').match(re),
+          ob = b.replace(/^Op/,'').match(re);
+
+      if (oa && ob)
+        return oa -ob;
+    }
+
+    let re = /^\d{4}/,
         ia = issued(a),
         ib = issued(b),
         ya = ia.match(re),
         yb = ib.match(re);
+
 
     if (ya && yb)
       return ya - yb;
@@ -66,7 +77,7 @@ lib.loadAlbums = function(art) {
 
 
 lib.loadTracks = function(alb) {
-  return fs.statSync(alb).isFile() ? [alb] : this.loadAlbum(alb);
+  return fs.statSync(alb).isFile() ? [alb] : lib.loadAlbum(alb);
 }
 
 lib.loadAlbum = function(alb) {

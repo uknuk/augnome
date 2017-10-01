@@ -130,7 +130,8 @@ view.View = function(app) {
   }
 
   const changeColor = (type, n, from, to) => {
-    labels[type][n].setMarkup(labels[type][n].label.replace(from, to));
+    if (labels[type][n])
+      labels[type][n].setMarkup(labels[type][n].label.replace(from, to));
   }
 
   function changeColors(type, prev, next) {
